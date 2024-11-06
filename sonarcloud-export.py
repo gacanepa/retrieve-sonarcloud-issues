@@ -13,12 +13,31 @@ from constants import EXCLUSION_PATTERNS, ISSUE_FIELDS, SONARCLOUD_API_URL, OUTP
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def filter_issues_by_component(issues):
+    """
+    Filter issues based on exclusion patterns defined in EXCLUSION_PATTERNS.
+    
+    Args:
+        issues (list): List of issues to be filtered.
+    
+    Returns:
+        list: List of filtered issues.
+    """
     return [
         issue for issue in issues
         if all(pattern not in issue.get("component", "") for pattern in EXCLUSION_PATTERNS)
     ]
 
 def get_open_issues(project_key, token):
+    """
+    Retrieve open issues from SonarCloud for a given project key.
+    
+    Args:
+        project_key (str): The SonarCloud project key.
+        token (str): The authentication token.
+    
+    Returns:
+        list: List of open issues for the project.
+    """
     headers = {
         "Authorization": f"Bearer {token}"
     }
@@ -65,6 +84,14 @@ def get_open_issues(project_key, token):
     return filter_issues_by_component(issues)
 
 def write_issues_to_excel(project_keys, token, output_file):
+    """
+    Write issues for multiple projects to an Excel file.
+    
+    Args:
+        project_keys (list): List of SonarCloud project keys.
+        token (str): The authentication token.
+        output_file (str): Path to the output Excel file.
+    """
     workbook = openpyxl.Workbook()
     for idx, project_key in enumerate(project_keys):
         issues = get_open_issues(project_key, token)
@@ -75,11 +102,9 @@ def write_issues_to_excel(project_keys, token, output_file):
         else:
             sheet = workbook.create_sheet(title=project_key)
 
-        # Define the headers
         headers = [field.capitalize() for field in ISSUE_FIELDS]
         sheet.append(headers)
 
-        # Write each issue's information as a new row in the Excel sheet
         for issue in issues:
             row = [issue.get(field) for field in ISSUE_FIELDS]
             sheet.append(row)
@@ -92,6 +117,9 @@ def write_issues_to_excel(project_keys, token, output_file):
         logging.error(f"Error saving the workbook to {output_file}: {e}")
 
 def main():
+    """
+    Main function to load environment variables and write issues to an Excel file.
+    """
     load_dotenv()
     project_keys_list = json.loads(getenv('SONARCLOUD_PROJECT_KEYS'))
     token = getenv('SONARCLOUD_TOKEN')
