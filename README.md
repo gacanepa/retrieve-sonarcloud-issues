@@ -1,6 +1,6 @@
 # Retrieve Issues From SonarCloud
 
-List of issue keys:
+List of issue keys. Pick from here and update `ISSUE_FIELDS` in the constants file to retrieve the desired fields.
 
 - `key`
 - `rule`
