@@ -1,12 +1,9 @@
-# tests/test_sonarcloud_export.py
 import unittest
 from unittest.mock import patch, MagicMock
 from utils import filter_issues_by_component, get_open_issues
-from constants import EXCLUSION_PATTERNS, ISSUE_FIELDS, SONARCLOUD_API_URL, OUTPUT_FILE
+from constants import EXCLUSION_PATTERNS
 import openpyxl
 import os
-
-from sonarcloud_export import write_issues_to_excel
 
 class TestSonarCloudExport(unittest.TestCase):
 
@@ -44,37 +41,39 @@ class TestSonarCloudExport(unittest.TestCase):
         self.assertEqual(len(issues), 1)
         self.assertEqual(issues[0]["message"], "Test message")
 
-    def test_write_issues_to_excel(self):
+    @patch("utils.get_open_issues")
+    def test_write_issues_to_excel(self, mock_get_open_issues):
+        from sonarcloud_export import write_issues_to_excel
+
+        mock_get_open_issues.return_value = [
+            {
+                "message": "Test message",
+                "type": "BUG",
+                "severity": "CRITICAL",
+                "effort": "5min",
+                "component": "test_component",
+                "line": 10
+            }
+        ]
+
         project_keys = ["test_project_key"]
         token = "test_token"
         output_file = "test_output.xlsx"
 
-        with patch("utils.get_open_issues") as mock_get_open_issues:
-            mock_get_open_issues.return_value = [
-                {
-                    "message": "Test message",
-                    "type": "BUG",
-                    "severity": "CRITICAL",
-                    "effort": "5min",
-                    "component": "test_component",
-                    "line": 10
-                }
-            ]
+        write_issues_to_excel(project_keys, token, output_file)
 
-            write_issues_to_excel(project_keys, token, output_file)
+        # Verify the output file was created
+        self.assertTrue(os.path.exists(output_file))
 
-            # Verify the output file was created
-            self.assertTrue(os.path.exists(output_file))
+        # Load the workbook and verify the contents
+        workbook = openpyxl.load_workbook(output_file)
+        sheet = workbook.active
+        self.assertEqual(sheet.title, "test_project_key")
+        self.assertEqual(sheet.cell(row=1, column=1).value, "Message")
+        self.assertEqual(sheet.cell(row=2, column=1).value, "Test message")
 
-            # Load the workbook and verify the contents
-            workbook = openpyxl.load_workbook(output_file)
-            sheet = workbook.active
-            self.assertEqual(sheet.title, "test_project_key")
-            self.assertEqual(sheet.cell(row=1, column=1).value, "Message")
-            self.assertEqual(sheet.cell(row=2, column=1).value, "Test message")
-
-            # Clean up
-            os.remove(output_file)
+        # Clean up
+        os.remove(output_file)
 
 if __name__ == "__main__":
     unittest.main()
