@@ -1,7 +1,9 @@
-# utils.py
+import logging
 import requests
-from http_constants.status import OK
-from constants import EXCLUSION_PATTERNS
+from constants import EXCLUSION_PATTERNS, SONARCLOUD_API_URL
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def filter_issues_by_component(issues):
     """
