@@ -5,8 +5,12 @@ from dotenv import load_dotenv
 import openpyxl
 from http_constants.status import OK
 import requests
+import logging
 
 from constants import EXCLUSION_PATTERNS, ISSUE_FIELDS, SONARCLOUD_API_URL, OUTPUT_FILE
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def filter_issues_by_component(issues):
     return [
@@ -31,10 +35,11 @@ def get_open_issues(project_key, token):
             "p": page
         }
 
-        response = requests.get(SONARCLOUD_API_URL, headers=headers, params=params)
-
-        if response.status_code != OK:
-            print(f"Error fetching data for project {project_key}:", response.status_code, response.text)
+        try:
+            response = requests.get(SONARCLOUD_API_URL, headers=headers, params=params)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error fetching data for project {project_key}: {e}")
             break
 
         data = response.json()
@@ -80,8 +85,11 @@ def write_issues_to_excel(project_keys, token, output_file):
             sheet.append(row)
 
     # Save the workbook to the specified file
-    workbook.save(output_file)
-    print(f"Data written to {output_file}")
+    try:
+        workbook.save(output_file)
+        logging.info(f"Data written to {output_file}")
+    except Exception as e:
+        logging.error(f"Error saving the workbook to {output_file}: {e}")
 
 def main():
     load_dotenv()
