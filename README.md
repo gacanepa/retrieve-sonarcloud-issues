@@ -29,6 +29,13 @@ List of issue keys:
 
 ## How to run
 
+0. Set the environment variables via an .env file
+
+```
+SONARCLOUD_PROJECT_KEYS = ["project1", "project2"]
+SONARCLOUD_TOKEN = "your-sonarcloud-token"
+```
+
 1. Create a virtual environment and install the dependencies
 
 ```bash
