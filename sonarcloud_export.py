@@ -29,11 +29,9 @@ def write_issues_to_excel(project_keys, token, output_file):
         else:
             sheet = workbook.create_sheet(title=project_key)
 
-        # Define the headers
         headers = [field.capitalize() for field in ISSUE_FIELDS]
         sheet.append(headers)
 
-        # Write each issue's information as a new row in the Excel sheet
         for issue in issues:
             row = [issue.get(field) for field in ISSUE_FIELDS]
             sheet.append(row)
